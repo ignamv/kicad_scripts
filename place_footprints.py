@@ -1,20 +1,76 @@
 #!/usr/bin/env python2
 from os import sys
 import pcbnew
+import shutil
 import argparse
+import os
+import glob
 
-parser = argparse.ArgumentParser(description=
-    'Modify kicad pcb file to place footprints like in the schematic')
+def wait():
+    print('\nPress any key to continue')
+    raw_input()
+
+def find_file(extension):
+    filename = os.path.join(directory, project_name + '.' + extension)
+    if not os.path.exists(filename):
+        matches = glob.glob(os.path.join(directory, '*.' + extension))
+        if not matches:
+            raise IOError('File not found')
+        if len(matches) > 1:
+            raise IOError('Too many matches')
+        return matches[0]
+    return filename
+
+parser = argparse.ArgumentParser(description="""\
+Modify kicad pcb file to place footprints like in the schematic.
+Your project needs to have a .kicad-pcb file with loaded netlist and footprint
+associations.""")
+parser.add_argument('project', nargs='?', help='Kicad project')
+parser.add_argument('--schematic', help='Input .sch file')
+parser.add_argument('--pcb', help='Input .kicad_pcb file')
 parser.add_argument('--scale', type=float, default=pcbnew.FromMils(1),
-        help='Distance scale factor from schematic to PCB (default 1)')
-parser.add_argument('schematic', help='Input .sch file')
-parser.add_argument('pcbin', help='Input .kicad-pcb file')
-parser.add_argument('pcbout', help='Output .kicad-pcb file')
+                help='Distance scale factor from schematic to PCB (default 1)')
 args = parser.parse_args()
 
-schematic = open(args.schematic)
-board = pcbnew.LoadBoard(args.pcbin)
+if args.schematic and args.pcb:
+    schfile = args.schematic
+    pcbfile = args.pcb
+else:
+    if os.path.isfile(args.project):
+        # If the user passed the .pro file, extract the directory
+        directory = os.path.dirname(args.project)
+        project_name = os.path.basename(args.project)
+        project_name = project_name[:project_name.rindex('.')]
+    else:
+        directory = args.project
+        try:
+            project_name = glob.glob(os.path.join(directory, '*.pro'))[0][:-4]
+        except IndexError:
+            print('Directory does not have a .pro file')
+            wait()
+            exit(-1)
+    print('Found project ' + project_name)
 
+    try:
+        schfile = find_file('sch')
+    except IOError as e:
+        print('Error searching for .sch file: {}'.format(e))
+        wait()
+        exit(-1)
+    print('Found schematic: ' + schfile)
+    try:
+        pcbfile = find_file('kicad_pcb')
+    except IOError as e:
+        print('Error searching for .kicad_pcb file: {}'.format(e))
+        wait()
+        exit(-1)
+    print('Found pcb: ' + pcbfile)
+
+schematic = open(schfile)
+board = pcbnew.LoadBoard(pcbfile)
+
+sys.stdout.write('Moving module...')
+sys.stdout.flush()
 while True:
     line = schematic.readline()
     if not line:
@@ -38,5 +94,19 @@ while True:
         # Probably a power symbol
         continue
     module.SetPosition(pcbnew.wxPoint(x, y))
+    sys.stdout.write(reference + ' ')
+    sys.stdout.flush()
+sys.stdout.write('\n')
 
-board.Save(args.pcbout)
+counter = 0
+while True:
+    try:
+        bakfile = pcbfile + '.bak' + str(counter)
+        os.stat(bakfile)
+        counter += 1
+    except:
+        break
+print('Backing up ' + pcbfile + ' to ' + bakfile)
+shutil.copyfile(pcbfile, bakfile)
+board.Save(pcbfile)
+wait()
