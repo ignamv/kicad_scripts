@@ -31,6 +31,8 @@ parser.add_argument('--height', type=Q_, help='Total outside height',
         required=True)
 parser.add_argument('--tracewidth', type=Q_, help='Trace width',
         required=True)
+parser.add_argument('--mirror', action='store_true',
+        help='Reflect footprint horizontally')
 parser.add_argument('--turns', type=int, help='Number of turns', required=True)
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument('--pitch', type=Q_,
@@ -56,7 +58,7 @@ tracewidth = args.tracewidth.to('mm').magnitude
 if args.pitch is not None:
     pitch = args.pitch.to('mm').magnitude
 else:
-    pitch = args.spacing.to('mm').magnitude + tracewidth
+    pitch = args.separation.to('mm').magnitude + tracewidth
 vertices = 4 * args.turns + 1
 freq = args.frequency.to('Hz').magnitude
 angfreq = 2 * sp.pi * freq
@@ -79,6 +81,10 @@ coordinates[2::4,1] = -coordinates[0:-1:4,1]
 coordinates[3::4,1] = coordinates[0:-1:4,1]
 coordinates[0::4,1] += pitch
 coordinates[:,2] = 0
+
+if args.mirror:
+    # Reflect x axis
+    coordinates[:,0] *= -1
 
 # Then connect them
 elements = sp.empty((vertices - 1, 4), dtype=float)
