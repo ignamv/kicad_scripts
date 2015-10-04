@@ -1,0 +1,41 @@
+{% extends "body.html" %}
+{% block title %}PCB Spiral inductor calculator / Kicad footprint generator{% endblock %}
+{% block content %}
+<img src="{{ url_for('static', filename='spiral.svg') }}" />
+<form action="{{ url_for('calculate') }}" method="POST" id="form">
+    <table>
+        <tr><td><label for="units">Units</label></td><td>
+                <input name="units" type="radio" value="mm" checked>mm</input>
+                <input name="units" type="radio" value="cm">cm</input>
+                <input name="units" type="radio" value="mil">mil</input>
+                <input name="units" type="radio" value="in">in</input>
+            </td></tr>
+        <tr><td><label for="width">Width</label></td><td><input id="width"
+                                                                name="width"
+                                                                value="100"
+                                                                /></td></tr>
+        <tr><td><label for="height">Height</label></td><td><input id="height"
+                                                                  name="height" value="50" /></td></tr>
+        <tr><td><label for="pitch">Pitch</label></td><td><input id="pitch"
+                                                                name="pitch" value="1" /></td></tr>
+        <tr><td><label for="turns">Turns</label></td><td><input id="turns"
+                                                                name="turns" value="10" /></td></tr>
+        <tr><td><label for="trace_width">Trace width</label></td><td><input
+                       id="trace_width" name="trace_width" value=".5" /></td></tr>
+        <tr><td><label for="trace_height">Trace
+                    thickness</label></td><td><input id="trace_height"
+                                                     name="trace_height" value=".035" /></td></tr>
+        <tr><td><label for="frequency">Frequency</label></td><td><input
+                       id="frequency" name="frequency" value="125e3" /></td></tr>
+        <tr><td><label for="pad_size">Pad size</label></td><td><input
+                       id="pad_size" name="pad_size" value="2" /></td></tr>
+    </table>
+    <div id="buttons">
+        <input type="submit" name="calculate" id="calculate" 
+               value="Calculate" />
+        <input type="submit" name="download" id="download" 
+               value="Download Kicad Footprint" />
+    </div>
+</form>
+<div id="results"></div>
+{% endblock %}

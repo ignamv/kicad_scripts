@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>{% block title %}{% endblock %}</title>
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery-1.11.3.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='form.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+
+<body>
+    <div id="content">
+        <h1>{{ self.title() }}</h1>
+        {% block content %}{% endblock %}
+    </div>
+</body>
+
+</html>

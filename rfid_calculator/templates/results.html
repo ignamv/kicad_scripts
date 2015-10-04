@@ -1,0 +1,21 @@
+{% if not success %}
+<h2>Error</h2>
+<p>{{ error }}</p>
+{% else %}
+<table>
+    <tr>
+        <td>Inductance</td><td>{{ inductance }}</td>
+    </tr>
+    <tr>
+        <td>Resistance</td><td>{{ resistance }}</td>
+    </tr>
+    <tr>
+        <td>Q factor</td><td>{{ qfactor }}</td>
+    </tr>
+    <tr>
+        <td>Resonant capacitor</td><td>{{ capacitance }}</td>
+    </tr>
+</table>
+<a href="{{ download }}">Download Kicad footprint</a>
+{% endif %}
+

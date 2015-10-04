@@ -1,0 +1,26 @@
+body {
+    background-color: #eee;
+    background-image: url('background.png');
+    background-attachment: fixed;
+    font-family: sans-serif;
+}
+#content {
+    text-align: center;
+    background-color: white;
+    width: 600px;
+    padding: 1em;   
+    margin-left: auto;
+    margin-right: auto;
+    border: thin solid black;
+}
+#content table {
+    text-align: left;
+}
+input {
+    border: 1px solid #ccc;
+    background-color: #eee;
+    padding: .2em .2em .2em .4em;
+}
+.invalid_field {
+    background-color: orange;
+}
