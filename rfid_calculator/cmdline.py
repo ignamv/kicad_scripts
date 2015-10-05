@@ -3,7 +3,7 @@
 import argparse
 import math
 from fasthenry import coil_impedance
-from spiral import squarespiral
+import spiral 
 from s_expression import SExpression, identifier
 
 def si_prefix_format(number, format="{:.1f} "):
@@ -42,8 +42,7 @@ group.add_argument('--pitch', type=float,
 group.add_argument('--separation', type=float, help='Separation between traces')
 parser.add_argument('--zpitch', type=float, default=0.,
         help='Vertical pitch (default 0 for planar inductor)')
-parser.add_argument('--frequency', type=float, help='Operating frequency',
-        required=True)
+parser.add_argument('--frequency', type=float, help='Operating frequency')
 group2 = parser.add_mutually_exclusive_group()
 group2.add_argument('--thickness', type=float, help='Copper thickness')
 group2.add_argument('--weight', type=float, default=1.,
@@ -66,6 +65,14 @@ units.add_argument('--mil', action='store_const', dest='scale', const=.0254,
 units.add_argument('--in', action='store_const', dest='scale', const=25.4,
         help='Dimensions in inches')
 
+shape = parser.add_mutually_exclusive_group(required=False)
+shape.add_argument('--square', action='store_const', dest='shape',
+        const='square', default='square', help='Generate square spiral')
+shape.add_argument('--ellipse', action='store_const', dest='shape',
+        const='ellipse', help='Generate elliptical spiral')
+parser.add_argument('--vertices_per_turn', type=int, default=8,
+        help='Number of vertices per turn (for elliptical spirals)')
+
 args = parser.parse_args()
 if args.fasthenry and args.frequency is None:
     parser.error('Frequency is required for FastHenry analysis')
@@ -84,18 +91,21 @@ if args.pad_size is None:
 else:
     pad_size = args.pad_size * args.scale
 
-angfreq = 2 * math.pi * args.frequency
-
 if args.thickness is not None:
     trace_height = args.thickness * args.scale
 else:
     # 1 oz/ft² copper is 1.5 mils thick = .03406 mm
     trace_height = args.weight * .03406
 
-coil = list((x * args.mirror, y) for x,y in squarespiral(side1, side2, pitch,
-                                                         args.turns))
+if args.shape == 'square':
+    coil = spiral.squarespiral(side1, side2, pitch, args.turns)
+else:
+    coil = spiral.ellipticalspiral(side1, side2, pitch, args.turns,
+            args.vertices_per_turn)
+coil = list((x * args.mirror, y) for x,y in coil)
 
 if args.fasthenry:
+    angfreq = 2 * math.pi * args.frequency
     Z = coil_impedance(((x,y,ii*zpitch/4) for ii, (x,y) in enumerate(coil)),
             trace_width, trace_height, args.frequency)
     L = Z.imag / angfreq
@@ -132,14 +142,33 @@ if args.kicad_mod is not None:
         ('start', coil[ii]), ('end', coil[ii + 1]), ('layer', 'F.Cu'),
         ('width', trace_width)]) for ii in range(len(coil) - 1))
     pad_offset = (pad_size - trace_width) / 2
-    module.children.append(SExpression('pad', [1, identifier('smd'),
-        identifier('rect')], [('at', (coil[0][0] - pad_offset * args.mirror,
-            coil[0][1] + pad_offset)), ('size', [pad_size, pad_size]),
-            ('layers', 'F.Cu')]))
-    module.children.append(SExpression('pad', [2, identifier('smd'),
-        identifier('rect')], [('at', (coil[-1][0] - pad_offset * args.mirror,
-            coil[-1][1] - pad_offset)), ('size', [pad_size, pad_size]),
-            ('layers', 'F.Cu')]))
+    if args.shape == 'square':
+        pads = [
+            (1, (coil[0][0] - pad_offset * args.mirror, 
+                 coil[0][1] + pad_offset),
+                 'rect'),
+            (2, (coil[-1][0] - pad_offset * args.mirror,
+                 coil[-1][1] - pad_offset),
+                 'rect')]
+    else:
+        pads = [
+            (1, (coil[0][0] + pad_offset * args.mirror, 
+                 coil[0][1] - pad_offset),
+                 'rect'),
+            (2, (coil[-1][0] - pad_offset * args.mirror,
+                 coil[-1][1]),
+                 'circle')]
+        pad_locations = [
+            (coil[0][0] + pad_offset * args.mirror, coil[0][1] - pad_offset),
+            (coil[-1][0] - pad_offset * args.mirror, coil[-1][1] + pad_offset)]
+    for number, location, shape in pads:
+        module.children.append(SExpression('pad', [
+            number, 
+            identifier('smd'),
+            identifier(shape)], [
+                ('at', location),
+                ('size', [pad_size, pad_size]),
+                ('layers', 'F.Cu')]))
     descr = 'PCB inductor {}m x {}m {} turns {}m pitch'.format(
         si_prefix_format(side1*2e-3), si_prefix_format(side2*2e-3), 
         args.turns, si_prefix_format(pitch*1e-3))
