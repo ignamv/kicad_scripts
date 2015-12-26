@@ -11,16 +11,19 @@ design, you can save a Kicad footprint to incorporate into your PCB layout.
 
 ### Instructions
 
-Download the script and run it from the command line. Requires pint and scipy
-(if you ask nicely I can reduce the dependencies). Example:
+You can use it online at http://ignamv2.linkpc.net/spiral/
 
-    $ python spiral_inductor.py -h
-    usage: spiral_inductor.py [-h] --width WIDTH --height HEIGHT --tracewidth
-                              TRACEWIDTH --turns TURNS
-                              (--pitch PITCH | --separation SEPARATION)
-                              [--frequency FREQUENCY]
-                              [--thickness THICKNESS | --areadensity AREADENSITY]
-                              [--fasthenry] [--kicad_mod KICAD_MOD]
+For local use, download the folder rfid_calculator and run cmdline.py. Example:
+
+    $ python3 cmdline.py --help
+    usage: cmdline.py [-h] --width WIDTH --height HEIGHT --trace_width TRACE_WIDTH
+                      [--mirror] --turns TURNS
+                      (--pitch PITCH | --separation SEPARATION) [--zpitch ZPITCH]
+                      [--frequency FREQUENCY]
+                      [--thickness THICKNESS | --weight WEIGHT] [--fasthenry]
+                      [--kicad_mod KICAD_MOD] [--pad_size PAD_SIZE]
+                      (--mm | --cm | --mil | --in) [--square | --ellipse]
+                      [--vertices_per_turn VERTICES_PER_TURN]
 
     Calculate PCB spiral inductor with FastHenry and produce Kicad footprint
 
@@ -28,28 +31,39 @@ Download the script and run it from the command line. Requires pint and scipy
       -h, --help            show this help message and exit
       --width WIDTH         Total outside width
       --height HEIGHT       Total outside height
-      --tracewidth TRACEWIDTH
+      --trace_width TRACE_WIDTH
                             Trace width
+      --mirror              Reflect footprint horizontally
       --turns TURNS         Number of turns
       --pitch PITCH         Trace pitch (width + separation)
       --separation SEPARATION
                             Separation between traces
+      --zpitch ZPITCH       Vertical pitch (default 0 for planar inductor)
       --frequency FREQUENCY
                             Operating frequency
       --thickness THICKNESS
                             Copper thickness
-      --areadensity AREADENSITY
-                            Copper area density (default 1oz/ft²)
+      --weight WEIGHT       Copper weight per unit area in oz/ft²
       --fasthenry           Calculate inductance and Q with FastHenry (
                             http://www.fastfieldsolvers.com )
       --kicad_mod KICAD_MOD
                             Save Kicad footprint to this file
-    $ python spiral_inductor.py --width=50mm --height=25mm --pitch=5mm --tracewidth=2mm --turns=3 --fasthenry --kicad_mod=/tmp/ant.kicad_mod --frequency=125kHz
-    Analysis of 50.0 mm x 25.0 mm 3-turn 5.0 mm pitch inductor at 125.0 kHz
+      --pad_size PAD_SIZE   Save Kicad footprint to this file
+      --mm                  Dimensions in millimeters
+      --cm                  Dimensions in centimeters
+      --mil                 Dimensions in mils = 1in / 1000
+      --in                  Dimensions in inches
+      --square              Generate square spiral
+      --ellipse             Generate elliptical spiral
+      --vertices_per_turn VERTICES_PER_TURN
+                            Number of vertices per turn (for elliptical spirals)
 
-              Inductance: 298.9 nH
-    Resonant capacitance: 5.4 µF
-                       Q: 2.8e+00
+    $ python3 cmdline.py --mm --width=50 --height=25 --pitch=5 --trace_width=2 --turns=3 --fasthenry --kicad_mod=/tmp/ant.kicad_mod --frequency=125e3
+    Analysis of 50.0 mm x 25.0 mm 3-turn 5.0 mm pitch 2.0 mm trace inductor at 125.0 kHz
+
+              Inductance: 11.9 nH
+    Resonant capacitance: 136.8 µF
+                       Q: 5.4e+02
 
     Footprint written to /tmp/ant.kicad_mod
 
