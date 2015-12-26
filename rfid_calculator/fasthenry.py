@@ -59,8 +59,8 @@ class InputFile(io.StringIO):
             #height_filaments
 
 
-def coil_impedance(vertices, trace_width, trace_height, frequency):
-    process = subprocess.Popen(['./fasthenry'],
+def coil_impedance(vertices, trace_width, trace_height, frequency, fasthenry='fasthenry'):
+    process = subprocess.Popen([fasthenry],
             stdin=subprocess.PIPE, 
             stdout=open('fasthenry.log', 'w'),
             universal_newlines=True)

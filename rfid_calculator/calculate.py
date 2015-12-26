@@ -97,7 +97,8 @@ def calculate():
     try:
         impedance = coil_impedance(coil, args['trace_width'],
         args['trace_height'],
-        args['frequency'])
+        args['frequency'], 
+        './fasthenry')
     except TimeoutExpired:
         return dict(success=False, error='Calculations took too long')
     angfreq = 2 * math.pi * args['frequency']
