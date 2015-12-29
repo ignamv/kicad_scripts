@@ -4,13 +4,13 @@ import flask
 import math
 application = flask.Flask(__name__)
 
-from spiral import spiral
+from spiral import squarespiral
 from fasthenry import coil_impedance
 from trace_footprint import write_trace_footprint
 from subprocess import TimeoutExpired
 import functools
 import os
-os.chdir('/var/www/spiral')
+#os.chdir('/var/www/spiral')
 
 @application.route('/')
 def root():
@@ -92,7 +92,7 @@ def calculate():
         return dict(success=False, error=str(e))
     args['width'] -= args['trace_width']
     args['height'] -= args['trace_width']
-    coil = ((x, y, 0) for x,y in spiral(args['width']/2, args['height']/2,
+    coil = ((x, y, 0) for x,y in squarespiral(args['width']/2, args['height']/2,
         args['pitch'], args['turns']))
     try:
         impedance = coil_impedance(coil, args['trace_width'],
@@ -124,7 +124,7 @@ def footprint():
     resistance = flask.request.values.get('resistance', default='')
     qfactor = flask.request.values.get('qfactor', default='')
     capacitance = flask.request.values.get('capacitance', default='')
-    coil = list(spiral(args['width']/2, args['height']/2, args['pitch'],
+    coil = list(squarespiral(args['width']/2, args['height']/2, args['pitch'],
         args['turns']))
     description = 'PCB inductor {}m x {}m {} turns {}m pitch'.format(
         format_si_prefix(args['width']*1e-3),
